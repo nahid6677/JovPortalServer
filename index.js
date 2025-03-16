@@ -1,11 +1,19 @@
 const express = require("express");
 const app = express();
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 require("dotenv").config();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors(
+  {
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  }
+));
 app.use(express.json());
+app.use(cookieParser());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xch7i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -33,6 +41,14 @@ async function run() {
     const jobApplicationCollection = database.collection("job_application");
 
     // Auth related api
+    app.post("/jwt", async(req,res)=>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '1h'});
+      res.cookie('token', token,{
+        httpOnly: true,
+        secure: false
+      }).send({success: true});
+    })
     
 
     app.get("/jobs", async (req, res) => {
@@ -109,6 +125,7 @@ async function run() {
       if (queryEmail) {
         query = { applicant_email: queryEmail };
       }
+      console.log("cuk cuk cookies", req.cookies);
       const result = await jobApplicationCollection.find(query).toArray();
       for (const apps of result) {
         const query1 = { _id: new ObjectId(apps.job_id) };
