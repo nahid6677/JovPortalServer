@@ -6,13 +6,15 @@ require("dotenv").config();
 const cors = require("cors");
 const port = process.env.PORT || 3000;
 
+//send and set the token to client browser in the cookies. Exm: (key:value)token:value
 app.use(cors(
   {
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173"], // how many side allow
     credentials: true,
   }
 ));
 app.use(express.json());
+// must use cookiesParser
 app.use(cookieParser());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
@@ -41,6 +43,7 @@ async function run() {
     const jobApplicationCollection = database.collection("job_application");
 
     // Auth related api
+    //first only generate a token => next user login complete and axios.post to the client side then just create jwt token. 
     app.post("/jwt", async(req,res)=>{
       const user = req.body;
       const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '1h'});
