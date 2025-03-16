@@ -17,6 +17,29 @@ app.use(express.json());
 // must use cookiesParser
 app.use(cookieParser());
 
+const logger = (req,res,next)=>{
+  console.log('inside the token')
+  next()
+}
+// vailed the token (step 5)
+const verifyToken = (req,res,next) =>{
+  const token = req?.cookies?.token;
+  // console.log("inside the verifyToken",req.cookies, token)
+  if(!token){
+    console.log("token missing")
+    return res.status(401).send({message: "Unauthorized assess"})
+
+  }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) =>{
+    if(err){
+      console.log("verify Err")
+      return res.status(401).send({message: "Unauthorized assess"})
+    }
+    req.user = decoded; // set the user any req paramitter, because check user and users token are equeal in this api
+    next()
+  })
+}
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xch7i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -121,14 +144,17 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/job-application", async (req, res) => {
+    app.get("/job-application", verifyToken, async (req, res) => {
       const queryEmail = req.query.email;
-      // console.log(queryEmail, "emeil");
+      // console.log(queryEmail, "emeil" , req.user.email) ;
+      if(req.user.email !== queryEmail){   // (step 5) check user (email) and users token are equeal in this api
+        return res.status(403).send({message: "Forbidden access"})
+      }
       let query = {};
       if (queryEmail) {
         query = { applicant_email: queryEmail };
       }
-      console.log("cuk cuk cookies", req.cookies);
+      // console.log("cuk cuk cookies", req.cookies); 
       const result = await jobApplicationCollection.find(query).toArray();
       for (const apps of result) {
         const query1 = { _id: new ObjectId(apps.job_id) };
