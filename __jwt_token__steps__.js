@@ -3,11 +3,11 @@
  *  npm i jsonwebtoken cookie-parser
  *  jwt.sign(payload, secret, {expairesIn: "1h"})
  * 
- * 2.send token (generated in the server side) to the client side
- * localstroage --> easear 
- * httpOnly cookies ---> standart way
+ * 2. firstly send request to genarate the token (generated in the server side) to the client side request
  * 
- * 3.for sensitive or secure apis: send token to the server side 
+ * 
+ * 3.for sensitive or secure apis: send token from the server side to client browser cookies
+ * on the server side: 
  * app.use(cors(
    {
      origin: ["http://localhost:5173"],
@@ -15,9 +15,11 @@
    }
  ));
  * 
+ * 4. In the client side: 
+ * send the browser cookies token to server side {for valided: token is same}
  * 
  * 
- * 4.validate the token in the server side:
+ * 5.receive the token and validate the token in the server side:
  * if valid: provide data
  * else: logout the user
  * 

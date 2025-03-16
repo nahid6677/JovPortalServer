@@ -43,7 +43,7 @@ async function run() {
     const jobApplicationCollection = database.collection("job_application");
 
     // Auth related api
-    //first only generate a token => next user login complete and axios.post to the client side then just create jwt token. 
+    //first only generate a token => second next user login complete and axios.post to the client side then just create jwt token. 
     app.post("/jwt", async(req,res)=>{
       const user = req.body;
       const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '1h'});
