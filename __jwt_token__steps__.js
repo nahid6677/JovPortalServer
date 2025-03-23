@@ -1,12 +1,19 @@
 /**
  * 1. after successful login: generate a jwt token 
- *  npm i jsonwebtoken cookie-parser
- *  jwt.sign(payload, secret, {expairesIn: "1h"})
+ *  npm i jsonwebtoken cookie-parser 
+ *  import 
+ * const jwt = require('jsonwebtoken');
+ * const cookiesParser = require('cookie-parser');
+ *  and use app.use(cookieParser()) middleWire 
+ * 
+ * create a token from post api
+ *  jwt.sign(payload/user, secret, {expairesIn: "1h"})
+ * set token to the cookie of res
  * 
  * 2. firstly send request to genarate the token (generated in the server side) to the client side request
  * 
  * 
- * 3.for sensitive or secure apis: send token from the server side to client browser cookies
+ * 3.for sensitive or secure apis:> send token from the server side to client browser cookies
  * on the server side: 
  * app.use(cors(
    {

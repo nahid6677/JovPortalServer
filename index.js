@@ -22,24 +22,43 @@ const logger = (req,res,next)=>{
   next()
 }
 // vailed the token (step 5)
+// const verifyToken = (req,res,next) =>{
+//   const token = req?.cookies?.token;
+//   // console.log("inside the verifyToken",req.cookies, token)
+//   if(!token){
+//     console.log("token missing")
+//     return res.status(401).send({message: "Unauthorized assess"})
+
+//   }
+//   jwt.verify(token, process.env.JWT_SECRET, (err, decode) =>{
+//     if(err){
+//       console.log("verify Err")
+//       return res.status(403).send({message: "Unauthorized assess"})
+//     }
+//     console.log(decode)
+//     req.user = decode; // set the user any req paramitter, because check user and users token are equeal in this api
+//     next()
+//   })
+// }
+
 const verifyToken = (req,res,next) =>{
   const token = req?.cookies?.token;
-  // console.log("inside the verifyToken",req.cookies, token)
+  // console.log(token);
   if(!token){
-    console.log("token missing")
-    return res.status(401).send({message: "Unauthorized assess"})
-
+    return res.status(401).send({message: "Token Messing"})
   }
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) =>{
     if(err){
-      console.log("verify Err")
-      return res.status(401).send({message: "Unauthorized assess"})
+      console.log("verify Error", err)
+      return res.status(403).send({message: "Unauthorized assess"})
     }
-    req.user = decoded; // set the user any req paramitter, because check user and users token are equeal in this api
-    next()
+      console.log("decoded", decoded)
+      req.user = decoded;
+      next()
+    
+
   })
 }
-
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xch7i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -67,16 +86,32 @@ async function run() {
 
     // Auth related api
     //first only generate a token => second next user login complete and axios.post to the client side then just create jwt token. 
-    app.post("/jwt", async(req,res)=>{
+    // app.post("/jwt", async(req,res)=>{
+    //   const user = req.body;
+    //   const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '1h'});
+    //   res.cookie('token', token,{
+    //     httpOnly: true,
+    //     secure: false
+    //   }).send({success: true});
+    // })
+    
+    app.post("/jwt", async(req,res) =>{
+      const userMail  = req.body;
       const user = req.body;
-      const token = jwt.sign(user, process.env.JWT_SECRET, {expiresIn: '1h'});
-      res.cookie('token', token,{
+      // console.log(userMail, "usermail1",user);
+      const token = jwt.sign(userMail, process.env.JWT_SECRET, {expiresIn: "1h"});
+      await res.cookie("token", token,{
         httpOnly: true,
         secure: false
-      }).send({success: true});
+      }).send({message: 'set token true'})
     })
-    
 
+    app.use("/logout", async(req,res)=>{
+      await res.clearCookie("token",{
+        httpOnly: true,
+        secure: false
+      }).send({message: "clear token"})
+    })
     app.get("/jobs", async (req, res) => {
       const emails = req.query.email;
       // console.log(emails, "email")
@@ -144,12 +179,16 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/job-application", verifyToken, async (req, res) => {
+    app.get("/job-application",verifyToken, async (req, res) => {
       const queryEmail = req.query.email;
-      // console.log(queryEmail, "emeil" , req.user.email) ;
-      if(req.user.email !== queryEmail){   // (step 5) check user (email) and users token are equeal in this api
+      const decodeMail = req.user.email
+      console.log(queryEmail, "emeil" , decodeMail) ;
+      if(queryEmail !== decodeMail){
         return res.status(403).send({message: "Forbidden access"})
       }
+      // if(req.user.email !== queryEmail){   // (step 5) check user (email) and users token are equeal in this api
+      //   return res.status(403).send({message: "Forbidden access"})
+      // }
       let query = {};
       if (queryEmail) {
         query = { applicant_email: queryEmail };
